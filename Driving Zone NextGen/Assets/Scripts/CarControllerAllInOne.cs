@@ -111,15 +111,15 @@ public class CarControllerAllInOne : MonoBehaviour
     //The following variables lets you to set up touch controls for mobile devices.
     public bool useTouchControls = false;
     public GameObject throttleButton;
-    PrometeoTouchInput throttlePTI;
+    ButtonsTouchManager throttlePTI;
     public GameObject reverseButton;
-    PrometeoTouchInput reversePTI;
+    ButtonsTouchManager reversePTI;
     public GameObject turnRightButton;
-    PrometeoTouchInput turnRightPTI;
+    ButtonsTouchManager turnRightPTI;
     public GameObject turnLeftButton;
-    PrometeoTouchInput turnLeftPTI;
+    ButtonsTouchManager turnLeftPTI;
     public GameObject handbrakeButton;
-    PrometeoTouchInput handbrakePTI;
+    ButtonsTouchManager handbrakePTI;
 
 
 
@@ -263,11 +263,11 @@ public class CarControllerAllInOne : MonoBehaviour
         //    turnRightButton != null && turnLeftButton != null
         //    && handbrakeButton != null)
         //    {
-        //        throttlePTI = throttleButton.GetComponent<PrometeoTouchInput>();
-        //        reversePTI = reverseButton.GetComponent<PrometeoTouchInput>();
-        //        turnLeftPTI = turnLeftButton.GetComponent<PrometeoTouchInput>();
-        //        turnRightPTI = turnRightButton.GetComponent<PrometeoTouchInput>();
-        //        handbrakePTI = handbrakeButton.GetComponent<PrometeoTouchInput>();
+        //        throttlePTI = throttleButton.GetComponent<ButtonsTouchManager>();
+        //        reversePTI = reverseButton.GetComponent<ButtonsTouchManager>();
+        //        turnLeftPTI = turnLeftButton.GetComponent<ButtonsTouchManager>();
+        //        turnRightPTI = turnRightButton.GetComponent<ButtonsTouchManager>();
+        //        handbrakePTI = handbrakeButton.GetComponent<ButtonsTouchManager>();
         //        touchControlsSetup = true;
         //    }
         //    else
@@ -306,47 +306,47 @@ public class CarControllerAllInOne : MonoBehaviour
         */
         if (useTouchControls && touchControlsSetup)
         {
-            if (throttlePTI.buttonPressed)
+            if (throttlePTI.buttonPressFlag)
             {
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 GoForward();
             }
-            if (reversePTI.buttonPressed)
+            if (reversePTI.buttonPressFlag)
             {
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 GoReverse();
             }
 
-            if (turnLeftPTI.buttonPressed)
+            if (turnLeftPTI.buttonPressFlag)
             {
                 TurnLeft();
             }
-            if (turnRightPTI.buttonPressed)
+            if (turnRightPTI.buttonPressFlag)
             {
                 TurnRight();
             }
-            if (handbrakePTI.buttonPressed)
+            if (handbrakePTI.buttonPressFlag)
             {
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 Handbrake();
             }
-            if (!handbrakePTI.buttonPressed)
+            if (!handbrakePTI.buttonPressFlag)
             {
                 RecoverTraction();
             }
-            if ((!throttlePTI.buttonPressed && !reversePTI.buttonPressed))
+            if ((!throttlePTI.buttonPressFlag && !reversePTI.buttonPressFlag))
             {
                 ThrottleOff();
             }
-            if ((!reversePTI.buttonPressed && !throttlePTI.buttonPressed) && !handbrakePTI.buttonPressed && !deceleratingCar)
+            if ((!reversePTI.buttonPressFlag && !throttlePTI.buttonPressFlag) && !handbrakePTI.buttonPressFlag && !deceleratingCar)
             {
                 InvokeRepeating("DecelerateCar", 0f, 0.1f);
                 deceleratingCar = true;
             }
-            if (!turnLeftPTI.buttonPressed && !turnRightPTI.buttonPressed && steeringAxis != 0f)
+            if (!turnLeftPTI.buttonPressFlag && !turnRightPTI.buttonPressFlag && steeringAxis != 0f)
             {
                 ResetSteeringAngle();
             }

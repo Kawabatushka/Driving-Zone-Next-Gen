@@ -21,7 +21,7 @@ public class ButtonsTouchManager : MonoBehaviour
     {
         //Debug.Log("1 step\t\t" + buttonPressFlag);
         buttonPressFlag = !buttonPressFlag;
-        Debug.Log("2 step\t\t" + buttonPressFlag);
+        //Debug.Log("2 step\t\t" + buttonPressFlag);
         /*buttonPressFlag = false;
         Debug.Log("3 step\t\t" + buttonPressFlag);*/
     }

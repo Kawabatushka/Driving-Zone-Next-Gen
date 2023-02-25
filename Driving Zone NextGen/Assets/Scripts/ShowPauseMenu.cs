@@ -1,36 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ShowPauseMenu : MonoBehaviour
 {
 
-	[SerializeField] GameObject pauseButton;
-	ButtonsTouchManager pauseGame_BTM;
-	[SerializeField] GameObject continueGameButton;
-	ButtonsTouchManager continueGame_BTM;
+	[SerializeField] GameObject gameplayUI;
 	[SerializeField] GameObject pausePanelUI;
 	bool gameIsPaused = false;
 
 	void Start()
 	{
-		pauseGame_BTM = pauseButton.GetComponent<ButtonsTouchManager>();
-		continueGame_BTM = continueGameButton.GetComponent<ButtonsTouchManager>();
+		//gameplayUI.SetActive(true);
 		pausePanelUI.SetActive(false);
 	}
 
 	void Update()
 	{
-		// UI control
-		if (pauseGame_BTM.buttonPressFlag)
-		{
-			PauseUI();
-		}
-		if (continueGame_BTM.buttonPressFlag)
-		{
-			ResumeUI();
-		}
-
 		// Keyboard control
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
@@ -43,18 +27,7 @@ public class ShowPauseMenu : MonoBehaviour
 				PauseKeyboard();
 			}
 		}
-	}
 
-	void ResumeUI()
-	{
-		pausePanelUI.SetActive(false);
-		Time.timeScale = 1f;
-		continueGame_BTM.buttonPressFlag = false;
-	}
-	void PauseUI()
-	{
-		pausePanelUI.SetActive(true);
-		Time.timeScale = 0f;
 	}
 	void ResumeKeyboard()
 	{
@@ -67,5 +40,35 @@ public class ShowPauseMenu : MonoBehaviour
 		pausePanelUI.SetActive(true);
 		Time.timeScale = 0f;
 		gameIsPaused = true;
+	}
+
+
+	// UI control
+
+	public void ResumeUI()
+	{
+		pausePanelUI.SetActive(false);
+		gameplayUI.SetActive(true);
+		Time.timeScale = 1f;
+	}
+	public void PauseUI()
+	{
+		gameplayUI.SetActive(false);
+		pausePanelUI.SetActive(true);
+		Time.timeScale = 0f;
+	}
+	public void GarageUI()
+	{
+		pausePanelUI.SetActive(false);
+		gameplayUI.SetActive(true);
+		Time.timeScale = 1f;
+	}
+	public void SettingsUI()
+	{
+		Debug.Log("settings pamel is activated");
+		//pausePanelUI.SetActive(false);
+		gameplayUI.SetActive(false);
+		// активировать окно/панель с настройками
+		//Time.timeScale = 1f;
 	}
 }
