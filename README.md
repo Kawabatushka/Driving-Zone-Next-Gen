@@ -80,8 +80,5 @@ UI:  слева сверху кнопка паузы, чуть ниже пово
 ## Я пират 🏴‍☠️
 - оригинал скрипта управления авто, с его анимациями, звуком и моделька мустанга взяты у Mena Games -> https://assetstore.unity.com/packages/tools/physics/prometeo-car-controller-209444
 - вероятно, первая локация будет здесь -> https://assetstore.unity.com/packages/templates/systems/extreme-drift-88601
-- часть элемент UI взята здесь -> https://assetstore.unity.com/packages/2d/gui/icons/clean-vector-icons-132084
-- вероятно, часть элемент UI будет взята здесь -> https://assetstore.unity.com/packages/2d/gui/icons/simple-ui-elements-53276
-- вероятно, часть элемент UI будет взята здесь -> https://assetstore.unity.com/packages/2d/gui/icons/ux-flat-icons-free-202525
 - скайбокс взят тут -> https://assetstore.unity.com/packages/2d/textures-materials/sky/skybox-series-free-103633
 - 
