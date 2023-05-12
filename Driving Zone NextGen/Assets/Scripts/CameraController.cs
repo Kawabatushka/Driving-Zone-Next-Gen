@@ -1,6 +1,5 @@
-﻿//using System.Collections;
-//using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.Events;
 using System;
 
 /*
@@ -16,16 +15,15 @@ using System;
 
 public class CameraController : MonoBehaviour
 {
-
 	[SerializeField] GameObject target;
 	public MonoBehaviour cameraMonoBehaviour;
 	Camera camera;
 	int cameraNumber = 4;
 	[SerializeField] int currentCameraNumber;
-	[SerializeField] CameraParametres[] cameraParametres;
+	[SerializeField] CameraSetups[] cameraParametres;
 
 	[System.Serializable]
-	public class CameraParametres
+	class CameraSetups
 	{
 		[SerializeField] Vector3 cameraPosition;
 		[SerializeField] Vector3 cameraRotation;
@@ -34,15 +32,15 @@ public class CameraController : MonoBehaviour
 		[SerializeField] Vector3 cameraOffsetRotation; // поле для продвинутых эффектов камеры
 
 		// конструктор по умолчанию
-		public CameraParametres() { }
+		public CameraSetups() { }
 		// конструктор для полей, инициализируемых в Start()
-		public CameraParametres(Vector3 _position, int _cameraViewAngle)
+		public CameraSetups(Vector3 _position, int _cameraViewAngle)
 		{
 			cameraPosition = _position;
 			cameraViewAngle = _cameraViewAngle;
 		}
 		// конструктор для полей, инициализируемых в Update()
-		public CameraParametres(Vector3 _rotation, in Transform _target, in Transform _transform)
+		public CameraSetups(Vector3 _rotation, in Transform _target, in Transform _transform)
 		{
 			cameraRotation = _rotation;
 		}
@@ -74,10 +72,8 @@ public class CameraController : MonoBehaviour
 		}
 	}
 
-	Vector3 _offsetPosition;
 
-
-	private void Awake()
+	void Awake()
 	{
 		// в Volvo Demo так показано
 		camera = transform.GetComponent<Camera>();
@@ -85,22 +81,22 @@ public class CameraController : MonoBehaviour
 
 	void Start()
 	{
-
-		// при запуске игры выбран первый сетап настроек камеры (пока не добавил PlayerPrefs)
+		// when starting the game, the first setup of the camera settings is selected (while is no PlayerPrefs)
 		currentCameraNumber = 0;
 
-		// меняем длину массива сетапов настроек камеры
+		// change a lenght of a array of camera settings
 		Array.Resize(ref cameraParametres, cameraNumber);
 		for (int i = 0; i < cameraNumber; i++)
 		{
-			cameraParametres[i] = new CameraParametres();
+			cameraParametres[i] = new CameraSetups();
 		}
-
-		#region Сохраняем сетапы для камеры: позицию, повороты, угол обзора, дистанцию от автомобиля
-		cameraParametres[0] = new CameraParametres(new(0f, 3f, -17.5f), 60);
-		cameraParametres[1] = new CameraParametres(new(0f, 3.7f, -19f), 55);
-		cameraParametres[2] = new CameraParametres(new(0f, 1.5f, -12.7f), 65);
-		cameraParametres[3] = new CameraParametres(new(0f, 2f, -17.5f), 60);
+		
+		#region Save setups for the Camera: positions, rotations, field of view, distance to the car
+		Vector3 _offsetPosition;
+		cameraParametres[0] = new CameraSetups(new Vector3(0f, 3f, -17.5f), 60);
+		cameraParametres[1] = new CameraSetups(new Vector3(0f, 3.7f, -19f), 55);
+		cameraParametres[2] = new CameraSetups(new Vector3(0f, 1.5f, -12.7f), 65);
+		cameraParametres[3] = new CameraSetups(new Vector3(0f, 2f, -17.5f), 60);
 		
 		_offsetPosition.x = _offsetPosition.z = (float)Math.Sqrt(Math.Pow(target.transform.position.x - cameraParametres[0].CameraPosition.x, 2) + Math.Pow(target.transform.position.z - cameraParametres[0].CameraPosition.z, 2));
 		_offsetPosition.y = target.transform.position.y - cameraParametres[0].CameraPosition.y;
@@ -108,7 +104,7 @@ public class CameraController : MonoBehaviour
 		_offsetPosition.x = _offsetPosition.z = (float)Math.Sqrt(Math.Pow(target.transform.position.x - cameraParametres[1].CameraPosition.x, 2) + Math.Pow(target.transform.position.z - cameraParametres[1].CameraPosition.z, 2));
 		_offsetPosition.y = target.transform.position.y - cameraParametres[1].CameraPosition.y;
 		cameraParametres[1].CameraOffsetPosition = _offsetPosition;
-		// брать отрицательную дистанцию, т к камера находится спереди автомобиля
+		// for a camera with a view from the hood, take a negative distance, because the camera is located in front of the car
 		_offsetPosition.x = _offsetPosition.z = -(float)Math.Sqrt(Math.Pow(target.transform.position.x - cameraParametres[2].CameraPosition.x, 2) + Math.Pow(target.transform.position.z - cameraParametres[2].CameraPosition.z, 2));
 		_offsetPosition.y = target.transform.position.y - cameraParametres[2].CameraPosition.y;
 		cameraParametres[2].CameraOffsetPosition = _offsetPosition;
@@ -117,11 +113,35 @@ public class CameraController : MonoBehaviour
 		cameraParametres[3].CameraOffsetPosition = _offsetPosition;
 
 		#endregion
+		
+		
+		/*#region Save setups for the Camera: positions, rotations, field of view, distance to the car
+		Vector3 _offsetPosition;
+		cameraParametres[0] = new CameraSetups(new Vector3(0f, 3f, -17.5f), 60);
+		cameraParametres[1] = new CameraSetups(new Vector3(0f, 3.7f, -19f), 55);
+		cameraParametres[2] = new CameraSetups(new Vector3(0f, 1.5f, -12.7f), 65);
+		cameraParametres[3] = new CameraSetups(new Vector3(0f, 2f, -17.5f), 60);
+		
+		_offsetPosition.x = _offsetPosition.z = (float)Math.Sqrt(Math.Pow(target.transform.position.x - cameraParametres[0].CameraPosition.x, 2) + Math.Pow(target.transform.position.z - cameraParametres[0].CameraPosition.z, 2));
+		_offsetPosition.y = target.transform.position.y - cameraParametres[0].CameraPosition.y;
+		cameraParametres[0].CameraOffsetPosition = _offsetPosition;
+		_offsetPosition.x = _offsetPosition.z = (float)Math.Sqrt(Math.Pow(target.transform.position.x - cameraParametres[1].CameraPosition.x, 2) + Math.Pow(target.transform.position.z - cameraParametres[1].CameraPosition.z, 2));
+		_offsetPosition.y = target.transform.position.y - cameraParametres[1].CameraPosition.y;
+		cameraParametres[1].CameraOffsetPosition = _offsetPosition;
+		// для камеры с видом от капота брать отрицательную дистанцию, т к камера находится спереди автомобиля
+		_offsetPosition.x = _offsetPosition.z = -(float)Math.Sqrt(Math.Pow(target.transform.position.x - cameraParametres[2].CameraPosition.x, 2) + Math.Pow(target.transform.position.z - cameraParametres[2].CameraPosition.z, 2));
+		_offsetPosition.y = target.transform.position.y - cameraParametres[2].CameraPosition.y;
+		cameraParametres[2].CameraOffsetPosition = _offsetPosition;
+		_offsetPosition.x = _offsetPosition.z = (float)Math.Sqrt(Math.Pow(target.transform.position.x - cameraParametres[3].CameraPosition.x, 2) + Math.Pow(target.transform.position.z - cameraParametres[3].CameraPosition.z, 2));
+		_offsetPosition.y = target.transform.position.y - cameraParametres[3].CameraPosition.y;
+		cameraParametres[3].CameraOffsetPosition = _offsetPosition;
+
+		#endregion*/
 	}
 
 	void Update()
 	{
-		// переключение камеры с клавиатуры
+		// change Camera View by keyboard
 		if (Input.GetKeyDown(KeyCode.C))
 		{
 			cameraMonoBehaviour.enabled = false;
@@ -130,20 +150,21 @@ public class CameraController : MonoBehaviour
 		}
 	}
 
-	void LateUpdate()
+	//void LateUpdate()
+	void FixedUpdate()
 	{
 
-		#region Сохраняем сетапы для камеры: позицию, повороты, угол обзора, дистанцию от автомобиля
-
-		cameraParametres[0].CameraRotation = new(30f, target.transform.eulerAngles.y, 0f);
-		cameraParametres[1].CameraRotation = new(30f, target.transform.eulerAngles.y, 0f);
-		cameraParametres[2].CameraRotation = new(15f, target.transform.eulerAngles.y, 0f);
-		cameraParametres[3].CameraRotation = new(15f, target.transform.eulerAngles.y, 0f);
+		#region Save setups for the Camera: rotations
+		
+		cameraParametres[0].CameraRotation = new Vector3(30f, target.transform.eulerAngles.y, 0f);
+		cameraParametres[1].CameraRotation = new Vector3(30f, target.transform.eulerAngles.y, 0f);
+		cameraParametres[2].CameraRotation = new Vector3(15f, target.transform.eulerAngles.y, 0f);
+		cameraParametres[3].CameraRotation = new Vector3(15f, target.transform.eulerAngles.y, 0f);
 
 		#endregion
 
-
-		transform.position = new(target.transform.position.x - cameraParametres[currentCameraNumber].CameraOffsetPosition.x * Mathf.Sin(target.transform.eulerAngles.y * Mathf.Deg2Rad), 
+		// set Position and Rotation to Camera
+		transform.position = new Vector3(target.transform.position.x - cameraParametres[currentCameraNumber].CameraOffsetPosition.x * Mathf.Sin(target.transform.eulerAngles.y * Mathf.Deg2Rad), 
 			target.transform.position.y - cameraParametres[currentCameraNumber].CameraOffsetPosition.y, 
 			target.transform.position.z - cameraParametres[currentCameraNumber].CameraOffsetPosition.z * Mathf.Cos(target.transform.eulerAngles.y * Mathf.Deg2Rad));
 		transform.eulerAngles = cameraParametres[currentCameraNumber].CameraRotation;
@@ -151,7 +172,7 @@ public class CameraController : MonoBehaviour
 
 	}
 
-	// переключение камеры посредством UI
+	// change Camera View by UI
 	public void CameraChange()
 	{
 		currentCameraNumber++;

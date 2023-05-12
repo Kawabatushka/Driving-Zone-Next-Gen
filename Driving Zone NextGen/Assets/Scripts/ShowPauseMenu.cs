@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ShowPauseMenu : MonoBehaviour
 {
-
+	
 	[SerializeField] GameObject gameplayUI;
 	[SerializeField] GameObject pausePanelUI;
 	bool gameIsPaused = false;
@@ -68,7 +68,6 @@ public class ShowPauseMenu : MonoBehaviour
 		Debug.Log("settings pamel is activated");
 		//pausePanelUI.SetActive(false);
 		gameplayUI.SetActive(false);
-		// активировать окно/панель с настройками
 		//Time.timeScale = 1f;
 	}
 }

@@ -5,12 +5,12 @@ using System;
 
 /*
  *
- * удаление камеры назад при ускорении (acceleration - 1 из параметров)
- * приближение камеры при замедлении (deceleration - 1 из параметров)
- * отклонение камеры по оси X в зависимости от угла поворота колес, направления движения автомобиля (в т.ч. при дрифте). 
-					Можно изменять не позицию, а угол поворота камеры по оси Y, чтобы offsetPos оставался постоянным 
-					(т.е. камера вращалась всегда по траектории-коружности)
- * номер камеры сохранять в PlayerPrefs
+ * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (acceleration - 1 пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+ * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (deceleration - 1 пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+ * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ X пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅ пїЅ.пїЅ. пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ). 
+					пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ Y, пїЅпїЅпїЅпїЅпїЅ offsetPos пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+					(пїЅ.пїЅ. пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+ * пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ PlayerPrefs
  *
  */
 
@@ -65,13 +65,12 @@ public class cam : MonoBehaviour
 	{
 		camera = transform.GetComponent<Camera>();
 
-		// созраняем сетапы для камеры: позицию, повороты, угол обзора, дистанцию от автомобиля
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		Array.Resize(ref cameraParametres, cameraNumber);
 		cameraParametres[0] = new CameraParametres(new(0f, 3f, -17.5f), new(30f, target.transform.eulerAngles.y, 0f), 60, target.transform, transform);
 		cameraParametres[1] = new CameraParametres(new(0f, 3.7f, -19f), new(30f, target.transform.eulerAngles.y, 0f), 60, target.transform, transform);
 		cameraParametres[2] = new CameraParametres(new(0f, 1.5f, -12.7f), new(15f, target.transform.eulerAngles.y, 0f), 65, target.transform, transform);
 
-		// при запуске игры выбран первый сетап настроек камеры
 		currenCameraNumber = 0;
 		transform.position = cameraParametres[currenCameraNumber].CameraPosition;
 		transform.eulerAngles = cameraParametres[currenCameraNumber].CameraRotation;
@@ -80,7 +79,6 @@ public class cam : MonoBehaviour
 
 	void Start()
 	{
-		// вычисляем дистанцию камеры от автомобиля
 		float horizontalOffset = (float)Math.Sqrt(Math.Pow(target.transform.position.x - transform.position.x, 2) + Math.Pow(target.transform.position.z - transform.position.z, 2));
 		offsetPos = new(horizontalOffset, target.transform.position.y - transform.position.y, horizontalOffset);
 		//cameraParametres[currenCameraNumber].CameraOffsetPosition = new(0f,0f,0f);

@@ -1,38 +1,22 @@
-//using System.Collections;
-//using System.Collections.Generic;
 using UnityEngine;
 using System;
-//using UnityEngine.UI;
-
-
-
-
-// аккер барахлит (непонятно вычисляет угол поворота внутреннего колеса (там явно не ackermanCoef*...))
-
-
-/*
- * переписать DecelerateCar(): найти, с каким ускорением замедляются авто в ИРЛ
- * добавить рассчет угла Аккера
- * дать игроку возможность настраивать параметры brakeForce, maxSteeringAngle, bodyMassCenter, ackermanAngle
- * добавить алгоритм нахождения текущей скорости carSpeed
- */
-
 
 public class CarController : MonoBehaviour
 {
 	#region Variables
 	//CAR SETUP
 
-	[Header("CAR SETUP")]
-    [Space(8)]
-    [Range(70, 280)]
+    [Header("CAR SETUP")] [Space(8)] [Range(20, 280)]
     public int maxSpeed = 100;
+
+    public float minSpeed { get; private set; }
+
     [Range(30, 100)]
     public int maxReverseSpeed = 45;
     [Range(1, 10)]
     public int accelerationMultiplier = 3;
-    [Range(50, 300)]
-    public int brakeForce = 100;
+    [Range(100, 1000)]
+    public int brakeForce = 500;
     [Range(1, 10)]
     public int decelerationMultiplier = 2;
     [Range(1, 10)]
@@ -43,6 +27,7 @@ public class CarController : MonoBehaviour
     public int maxSteeringAngle = 38;
     /*[Range(0.9f, 1.85f)]
     public float ackermanCoef = 1.1f;*/
+    //float deceleratingCoef;
     [Space(10)]
     public Vector3 bodyMassCenter; // This is a vector that contains the center of mass of the car. I recommend to set this value
                                    // in the points x = 0 and z = 0 of your car. You can select the value that you want in the y axis,
@@ -67,12 +52,13 @@ public class CarController : MonoBehaviour
 
     //CAR DATA
 
-    [HideInInspector]
-    public float carSpeed; // Used to store the speed of the car.
+    [HideInInspector] public float carSpeed { get; private set; } // Used to store the speed of the car.
     [HideInInspector]
     public bool isDrifting; // Used to know whether the car is drifting or not.
     [HideInInspector]
     public bool isTractionLocked; // Used to know whether the traction of the car is locked or not.
+    [HideInInspector]
+    public bool isBraking; // Used to know whether the traction of the car is locked or not.
 
 
     //CONTROLS
@@ -80,8 +66,6 @@ public class CarController : MonoBehaviour
     [Space(20)]
     [Header("CONTROLS")]
     [Space(10)]
-    //The following variables lets you to set up touch controls for mobile devices.
-    /*public bool useTouchControls = true;*/
     [SerializeField] GameObject goForwardButton;
     ButtonsTouchManager throttle_BTM;
     [SerializeField] GameObject goBackButton;
@@ -105,7 +89,6 @@ public class CarController : MonoBehaviour
     float throttleAxis; // Used to know whether the throttle has reached the maximum value. It goes from -1 to 1.
     //float deceleratingAxis;
     bool deceleratingCar;
-    //bool touchControlsSetup = false;
     /*
         The following variables are used to store information about sideways friction of the wheels (such as
         extremumSlip,extremumValue, asymptoteSlip, asymptoteValue and stiffness). We change this values to
@@ -122,7 +105,6 @@ public class CarController : MonoBehaviour
 	#endregion
 
 
-
 	void Start()
     {
         //In this part, we set the 'carRigidbody' value with the Rigidbody attached to this
@@ -130,6 +112,8 @@ public class CarController : MonoBehaviour
         //in the inspector.
         carRigidbody = gameObject.GetComponent<Rigidbody>();
         carRigidbody.centerOfMass = bodyMassCenter;
+
+        //minSpeed = 0.25f;
 
         //Initial setup to calculate the drift value of the car. This part could look a bit
         //complicated, but do not be afraid, the only thing we're doing here is to save the default
@@ -142,32 +126,32 @@ public class CarController : MonoBehaviour
             FLWheelFriction.extremumValue = frontLeftCollider.sidewaysFriction.extremumValue;
             FLWheelFriction.asymptoteSlip = frontLeftCollider.sidewaysFriction.asymptoteSlip;
             FLWheelFriction.asymptoteValue = frontLeftCollider.sidewaysFriction.asymptoteValue;
-            //FLWheelFriction.stiffness = frontLeftCollider.sidewaysFriction.stiffness;
+            FLWheelFriction.stiffness = frontLeftCollider.sidewaysFriction.stiffness;
             FRWheelFriction = new WheelFrictionCurve();
             FRWExtremumSlip = frontRightCollider.sidewaysFriction.extremumSlip;
             FRWheelFriction.extremumSlip = frontRightCollider.sidewaysFriction.extremumSlip;
             FRWheelFriction.extremumValue = frontRightCollider.sidewaysFriction.extremumValue;
             FRWheelFriction.asymptoteSlip = frontRightCollider.sidewaysFriction.asymptoteSlip;
             FRWheelFriction.asymptoteValue = frontRightCollider.sidewaysFriction.asymptoteValue;
-            //FRWheelFriction.stiffness = frontRightCollider.sidewaysFriction.stiffness;
+            FRWheelFriction.stiffness = frontRightCollider.sidewaysFriction.stiffness;
             RLWheelFriction = new WheelFrictionCurve();
             RLWExtremumSlip = rearLeftCollider.sidewaysFriction.extremumSlip;
             RLWheelFriction.extremumSlip = rearLeftCollider.sidewaysFriction.extremumSlip;
             RLWheelFriction.extremumValue = rearLeftCollider.sidewaysFriction.extremumValue;
             RLWheelFriction.asymptoteSlip = rearLeftCollider.sidewaysFriction.asymptoteSlip;
             RLWheelFriction.asymptoteValue = rearLeftCollider.sidewaysFriction.asymptoteValue;
-            //RLWheelFriction.stiffness = rearLeftCollider.sidewaysFriction.stiffness;
+            RLWheelFriction.stiffness = rearLeftCollider.sidewaysFriction.stiffness;
             RRWheelFriction = new WheelFrictionCurve();
             RRWExtremumSlip = rearRightCollider.sidewaysFriction.extremumSlip;
             RRWheelFriction.extremumSlip = rearRightCollider.sidewaysFriction.extremumSlip;
             RRWheelFriction.extremumValue = rearRightCollider.sidewaysFriction.extremumValue;
             RRWheelFriction.asymptoteSlip = rearRightCollider.sidewaysFriction.asymptoteSlip;
             RRWheelFriction.asymptoteValue = rearRightCollider.sidewaysFriction.asymptoteValue;
-            //RRWheelFriction.stiffness = rearRightCollider.sidewaysFriction.stiffness;
+            RRWheelFriction.stiffness = rearRightCollider.sidewaysFriction.stiffness;
         }
 
 
-		if (/*useTouchControls*/ true) // безусловное использование кнопок для управления (вместе с клавишами)
+		if (true)
 		{
 			if (goForwardButton != null && goBackButton != null && turnRightButton != null && 
                 turnLeftButton != null && handbrakeButton != null)
@@ -177,7 +161,6 @@ public class CarController : MonoBehaviour
 				turnLeft_BTM = turnLeftButton.GetComponent<ButtonsTouchManager>();
 				turnRight_BTM = turnRightButton.GetComponent<ButtonsTouchManager>();
 				handbrake_BTM = handbrakeButton.GetComponent<ButtonsTouchManager>();
-				//touchControlsSetup = true;
 			}
 			else
 			{
@@ -191,7 +174,12 @@ public class CarController : MonoBehaviour
 
 	void Update()
     {
+        // We call the method AnimateWheelMeshes() in order to match the wheel collider movements with the 3D meshes of the wheels.
+		AnimateWheelMeshes();
+    }
 
+    void FixedUpdate()
+    {
         //CAR DATA
 
         carSpeed = (2 * Mathf.PI * frontLeftCollider.radius * frontLeftCollider.rpm * 60) / 1000;
@@ -199,7 +187,6 @@ public class CarController : MonoBehaviour
         localVelocityX = transform.InverseTransformDirection(carRigidbody.velocity).x;
         // Save the local velocity of the car in the z axis. Used to know if the car is going forward or backwards.
         localVelocityZ = transform.InverseTransformDirection(carRigidbody.velocity).z;
-
 
 		//CAR PHYSICS
 
@@ -214,61 +201,62 @@ public class CarController : MonoBehaviour
         A (turn left), D (turn right) or Space bar (handbrake).
         */
 
-		#region Car movement code
+		#region Car controling code
 		if (true)
         {
-            if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W) || throttle_BTM.buttonPressFlag)
+            if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W) || throttle_BTM.isPressed)
             {
                 //Debug.Log("------GoForward()------");
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 GoForward();
             }
-            if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S) || reverse_BTM.buttonPressFlag)
+            if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S) || reverse_BTM.isPressed)
             {
                 //Debug.Log("------GoReverse()------");
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 GoReverse();
             }
-            if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A) || turnLeft_BTM.buttonPressFlag)
+            if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A) || turnLeft_BTM.isPressed)
             {
                 //Debug.Log("------TurnLeft()------");
                 TurnLeft();
             }
-            if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D) || turnRight_BTM.buttonPressFlag)
+            if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D) || turnRight_BTM.isPressed)
             {
                 //Debug.Log("------TurnRight()------");
                 TurnRight();
             }
-            if (Input.GetKey(KeyCode.Space) || handbrake_BTM.buttonPressFlag)
+            if (Input.GetKey(KeyCode.Space) || handbrake_BTM.isPressed)
             {
                 //Debug.Log("------Handbrake()------");
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 Handbrake();
             }
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            if (!(Input.GetKey(KeyCode.Space) || handbrake_BTM.isPressed))
             {
                 //Debug.Log("------RecoverTraction()------");
                 RecoverTraction();
             }
             if (!(Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.S) ||
-                Input.GetKey(KeyCode.DownArrow) || throttle_BTM.buttonPressFlag || reverse_BTM.buttonPressFlag))
+                Input.GetKey(KeyCode.DownArrow) || throttle_BTM.isPressed || reverse_BTM.isPressed))
             {
                 //Debug.Log("------ThrottleOff()------");
-                ThrottleOff();
+                ThrottleOff(); 
+                //DecelerateCar();
             }
             if (!(Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.DownArrow) ||
-                Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.Space) || throttle_BTM.buttonPressFlag ||
-                reverse_BTM.buttonPressFlag || handbrake_BTM.buttonPressFlag || deceleratingCar))
+                Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.Space) || throttle_BTM.isPressed ||
+                reverse_BTM.isPressed || handbrake_BTM.isPressed || deceleratingCar))
             {
                 //Debug.Log("------DecelerateCar()------");
                 InvokeRepeating("DecelerateCar", 0f, 0.1f);
                 deceleratingCar = true;
             }
-            if (!(Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow) || turnLeft_BTM.buttonPressFlag ||
-                Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow) || turnRight_BTM.buttonPressFlag ||
+            if (!(Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow) || turnLeft_BTM.isPressed ||
+                Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow) || turnRight_BTM.isPressed ||
                 steeringAxis == 0f))
             {
                 //Debug.Log("------ResetSteeringAngle()------");
@@ -276,9 +264,6 @@ public class CarController : MonoBehaviour
             }
         }
 		#endregion
-
-		// We call the method AnimateWheelMeshes() in order to match the wheel collider movements with the 3D meshes of the wheels.
-		AnimateWheelMeshes();
     }
 
 
@@ -286,7 +271,9 @@ public class CarController : MonoBehaviour
     
     public void TurnLeft()
     {
-        steeringAxis = steeringAxis - (Time.deltaTime * 10f * steeringSpeed);
+        //Debug.Log("llllllllllllllll");
+        //Debug.Log("Time.deltaTime = " + Time.deltaTime);
+        steeringAxis -= Time.deltaTime * 10f * steeringSpeed;
         if (steeringAxis < -1f)
         {
             steeringAxis = -1f;
@@ -298,7 +285,9 @@ public class CarController : MonoBehaviour
 
     public void TurnRight()
     {
-        steeringAxis = steeringAxis + (Time.deltaTime * 10f * steeringSpeed);
+        //Debug.Log("RRRRRRRRRRRRRR");
+        //Debug.Log("Time.deltaTime = " + Time.deltaTime);
+        steeringAxis += Time.deltaTime * 10f * steeringSpeed;
         if (steeringAxis > 1f)
         {
             steeringAxis = 1f;
@@ -372,12 +361,12 @@ public class CarController : MonoBehaviour
         if (Mathf.Abs(localVelocityX) > 2.5f)
         {
             isDrifting = true;
-            ///DriftCarPS();
+            DriftCarPS();
         }
         else
         {
             isDrifting = false;
-            //DriftCarPS();
+            DriftCarPS();
         }
         // The following part sets the throttle power to 1 smoothly.
         throttleAxis = throttleAxis + (Time.deltaTime * 3f);
@@ -424,12 +413,12 @@ public class CarController : MonoBehaviour
         if (Mathf.Abs(localVelocityX) > 2.5f)
         {
             isDrifting = true;
-            //DriftCarPS();
+            DriftCarPS();
         }
         else
         {
             isDrifting = false;
-            //DriftCarPS();
+            DriftCarPS();
         }
         // The following part sets the throttle power to -1 smoothly.
         throttleAxis = throttleAxis - (Time.deltaTime * 3f);
@@ -482,12 +471,12 @@ public class CarController : MonoBehaviour
         if (Mathf.Abs(localVelocityX) > 2.5f)
         {
             isDrifting = true;
-            //DriftCarPS();
+            DriftCarPS();
         }
         else
         {
             isDrifting = false;
-            //DriftCarPS();
+            DriftCarPS();
         }
         // The following part resets the throttle power to 0 smoothly.
         if (throttleAxis != 0f)
@@ -513,7 +502,7 @@ public class CarController : MonoBehaviour
         rearRightCollider.motorTorque = 0;
         // If the magnitude of the car's velocity is less than 0.25f (very slow velocity), then stop the car completely and
         // also cancel the invoke of this method.
-        if (carRigidbody.velocity.magnitude < 0.25f)
+        if (carRigidbody.velocity.magnitude < minSpeed)
         {
             carRigidbody.velocity = Vector3.zero;
             CancelInvoke("DecelerateCar");
@@ -579,16 +568,16 @@ public class CarController : MonoBehaviour
         // Whenever the player uses the handbrake, it means that the wheels are locked, so we set 'isTractionLocked = true'
         // and, as a consequense, the car starts to emit trails to simulate the wheel skids.
         isTractionLocked = true;
-        //DriftCarPS();
+        DriftCarPS();
 
     }
 
     // This function is used to emit both the particle systems of the tires' smoke and the trail renderers of the tire skids
     // depending on the value of the bool variables 'isDrifting' and 'isTractionLocked'.
-    /*public void DriftCarPS()
+    public void DriftCarPS()
     {
 
-        if (useEffects)
+        /*if (useEffects)
         {
             try
             {
@@ -644,9 +633,9 @@ public class CarController : MonoBehaviour
             {
                 RRWTireSkid.emitting = false;
             }
-        }
+        }*/
 
-    }*/
+    }
 
     public void RecoverTraction()
     {

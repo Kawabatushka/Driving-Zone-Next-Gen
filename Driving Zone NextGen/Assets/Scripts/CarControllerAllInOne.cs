@@ -306,47 +306,47 @@ public class CarControllerAllInOne : MonoBehaviour
         */
         if (useTouchControls && touchControlsSetup)
         {
-            if (throttlePTI.buttonPressFlag)
+            if (throttlePTI.isPressed)
             {
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 GoForward();
             }
-            if (reversePTI.buttonPressFlag)
+            if (reversePTI.isPressed)
             {
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 GoReverse();
             }
 
-            if (turnLeftPTI.buttonPressFlag)
+            if (turnLeftPTI.isPressed)
             {
                 TurnLeft();
             }
-            if (turnRightPTI.buttonPressFlag)
+            if (turnRightPTI.isPressed)
             {
                 TurnRight();
             }
-            if (handbrakePTI.buttonPressFlag)
+            if (handbrakePTI.isPressed)
             {
                 CancelInvoke("DecelerateCar");
                 deceleratingCar = false;
                 Handbrake();
             }
-            if (!handbrakePTI.buttonPressFlag)
+            if (!handbrakePTI.isPressed)
             {
                 RecoverTraction();
             }
-            if ((!throttlePTI.buttonPressFlag && !reversePTI.buttonPressFlag))
+            if ((!throttlePTI.isPressed && !reversePTI.isPressed))
             {
                 ThrottleOff();
             }
-            if ((!reversePTI.buttonPressFlag && !throttlePTI.buttonPressFlag) && !handbrakePTI.buttonPressFlag && !deceleratingCar)
+            if ((!reversePTI.isPressed && !throttlePTI.isPressed) && !handbrakePTI.isPressed && !deceleratingCar)
             {
                 InvokeRepeating("DecelerateCar", 0f, 0.1f);
                 deceleratingCar = true;
             }
-            if (!turnLeftPTI.buttonPressFlag && !turnRightPTI.buttonPressFlag && steeringAxis != 0f)
+            if (!turnLeftPTI.isPressed && !turnRightPTI.isPressed && steeringAxis != 0f)
             {
                 ResetSteeringAngle();
             }
@@ -879,3 +879,4 @@ public class CarControllerAllInOne : MonoBehaviour
         }
     }
 }
+

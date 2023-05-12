@@ -13,8 +13,13 @@ public class ScenesManager : MonoBehaviour
 		SceneManager.LoadScene(sceneName);
 	}
 
-	public void CloseTheApplication()
+	public void CloseApplication()
 	{
+
+#if UNITY_EDITOR
+        	UnityEditor.EditorApplication.isPlaying = false;
+#endif
+
 		Application.Quit();
 	}
 }
