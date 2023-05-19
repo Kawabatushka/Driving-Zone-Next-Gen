@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using System;
 
@@ -8,100 +9,85 @@ public class CarController : MonoBehaviour
 
     [Header("CAR SETUP")] [Space(8)] [Range(20, 280)]
     public int maxSpeed = 100;
-
     public float minSpeed { get; private set; }
-
-    [Range(30, 100)]
-    public int maxReverseSpeed = 45;
-    [Range(1, 10)]
-    public int accelerationMultiplier = 3;
-    [Range(100, 1000)]
-    public int brakeForce = 500;
-    [Range(1, 10)]
-    public int decelerationMultiplier = 2;
-    [Range(1, 10)]
-    public int handbrakeDriftMultiplier = 5; // How much grip the car loses when the user hit the handbrake.
+    [Range(30, 100)] public int maxReverseSpeed = 45;
+    [Range(1, 10)] public int accelerationMultiplier = 3;
+    [Range(1, 10)] public int decelerationMultiplier = 2;
+    [Range(100, 1000)] public int brakeForce = 500;
+    [Range(0f, 1f)] public float distributionBrakingForceOnFrontAxis = 0.5f;
+    [Range(1, 10)] public int handbrakeDriftMultiplier = 5; // How much grip the car loses when the user hit the handbrake.
     //[Range(?, ?)]
     public float steeringSpeed = 0.5f;
-    [Range(30, 60)]
-    public int maxSteeringAngle = 38;
+    [Range(30, 60)] public int maxSteeringAngle = 38;
     /*[Range(0.9f, 1.85f)]
     public float ackermanCoef = 1.1f;*/
-    //float deceleratingCoef;
-    [Space(10)]
-    public Vector3 bodyMassCenter; // This is a vector that contains the center of mass of the car. I recommend to set this value
+    [SerializeField] 
+    [Space(10)] public Vector3 bodyMassCenter; // This is a vector that contains the center of mass of the car. I recommend to set this value
                                    // in the points x = 0 and z = 0 of your car. You can select the value that you want in the y axis,
                                    // however, you must notice that the higher this value is, the more unstable the car becomes.
                                    // Usually the y value goes from 0 to 1.5.
-
+                                   
+                                   
     //WHEELS
 
-    [Header("WHEELS")]
-    public GameObject frontLeftMesh;
+    [Header("WHEELS")] public GameObject frontLeftMesh;
     public WheelCollider frontLeftCollider;
-    [Space(5)]
-    public GameObject frontRightMesh;
+    [Space(5)] public GameObject frontRightMesh;
     public WheelCollider frontRightCollider;
-    [Space(5)]
-    public GameObject rearLeftMesh;
+    [Space(5)] public GameObject rearLeftMesh;
     public WheelCollider rearLeftCollider;
-    [Space(5)]
-    public GameObject rearRightMesh;
+    [Space(5)] public GameObject rearRightMesh;
     public WheelCollider rearRightCollider;
 
 
     //CAR DATA
 
-    [HideInInspector] public float carSpeed { get; private set; } // Used to store the speed of the car.
-    [HideInInspector]
-    public bool isDrifting; // Used to know whether the car is drifting or not.
-    [HideInInspector]
-    public bool isTractionLocked; // Used to know whether the traction of the car is locked or not.
-    [HideInInspector]
-    public bool isBraking; // Used to know whether the traction of the car is locked or not.
+    [HideInInspector] public float carSpeed { get; private set; }
+    [HideInInspector] public bool isDrifting;
+    [HideInInspector] public bool isTractionLocked;
+    [HideInInspector] public bool isBraking;
 
 
     //CONTROLS
 
-    [Space(20)]
-    [Header("CONTROLS")]
-    [Space(10)]
-    [SerializeField] GameObject goForwardButton;
+    [Space(20)] [Header("CONTROLS")] [Space(10)] [SerializeField]
+    private GameObject goForwardButton;
     ButtonsTouchManager throttle_BTM;
-    [SerializeField] GameObject goBackButton;
-    ButtonsTouchManager reverse_BTM;
-    [SerializeField] GameObject turnRightButton;
-    ButtonsTouchManager turnRight_BTM;
-    [SerializeField] GameObject turnLeftButton;
-    ButtonsTouchManager turnLeft_BTM;
-    [SerializeField] GameObject handbrakeButton;
-    ButtonsTouchManager handbrake_BTM;
+    [SerializeField] private GameObject goBackButton;
+    private ButtonsTouchManager reverse_BTM;
+    [SerializeField] private GameObject turnRightButton;
+    private ButtonsTouchManager turnRight_BTM;
+    [SerializeField] private GameObject turnLeftButton;
+    private ButtonsTouchManager turnLeft_BTM;
+    [SerializeField] private GameObject handbrakeButton;
+    private ButtonsTouchManager handbrake_BTM;
 
 
 
     //PRIVATE VARIABLES
 
     Rigidbody carRigidbody; // Stores the car's rigidbody.
-    [SerializeField] float localVelocityZ;
-    [SerializeField] float localVelocityX;
-    [SerializeField] float driftingAxis;
-    float steeringAxis; // Used to know whether the steering wheel has reached the maximum value. It goes from -1 to 1.
-    float throttleAxis; // Used to know whether the throttle has reached the maximum value. It goes from -1 to 1.
+    [SerializeField] private float localVelocityZ;
+    [SerializeField] private float localVelocityX;
+    [SerializeField] private float driftingAxis;
+    private float steeringAxis; // Used to know whether the steering wheel has reached the maximum value. It goes from -1 to 1.
+
+    private float throttleAxis; // Used to know whether the throttle has reached the maximum value. It goes from -1 to 1.
     //float deceleratingAxis;
-    bool deceleratingCar;
+    private bool deceleratingCar;
     /*
         The following variables are used to store information about sideways friction of the wheels (such as
         extremumSlip,extremumValue, asymptoteSlip, asymptoteValue and stiffness). We change this values to
         make the car to start drifting.
     */
-    WheelFrictionCurve FLWheelFriction;
-    float FLWExtremumSlip;
-    WheelFrictionCurve FRWheelFriction;
-    float FRWExtremumSlip;
-    WheelFrictionCurve RLWheelFriction;
-    float RLWExtremumSlip;
-    WheelFrictionCurve RRWheelFriction;
-    float RRWExtremumSlip;
+    private WheelFrictionCurve FLWheelFriction;
+    private float FLWExtremumSlip;
+    private WheelFrictionCurve FRWheelFriction;
+    private float FRWExtremumSlip;
+    private WheelFrictionCurve RLWheelFriction;
+    private float RLWExtremumSlip;
+    private WheelFrictionCurve RRWheelFriction;
+    private float RRWExtremumSlip;
 	#endregion
 
 
@@ -511,10 +497,10 @@ public class CarController : MonoBehaviour
 
     public void Brakes()
     {
-        frontLeftCollider.brakeTorque = brakeForce;
-        frontRightCollider.brakeTorque = brakeForce;
-        rearLeftCollider.brakeTorque = brakeForce;
-        rearRightCollider.brakeTorque = brakeForce;
+        frontLeftCollider.brakeTorque = brakeForce * distributionBrakingForceOnFrontAxis;
+        frontRightCollider.brakeTorque = brakeForce * distributionBrakingForceOnFrontAxis;
+        rearLeftCollider.brakeTorque = brakeForce * (1 - distributionBrakingForceOnFrontAxis);
+        rearRightCollider.brakeTorque = brakeForce * (1 - distributionBrakingForceOnFrontAxis);
     }
 
     // This function is used to make the car lose traction. By using this, the car will start drifting. The amount of traction lost
