@@ -16,7 +16,7 @@ public class CameraController : MonoBehaviour
 				virtualCameras[i].Priority = 1;
 			}
 			else
-			{
+			{ 
 				virtualCameras[i].Priority = 0;
 			}
 		}
