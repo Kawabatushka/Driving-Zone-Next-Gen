@@ -1,16 +1,26 @@
 ﻿using UnityEngine;
-using System;
 using Cinemachine;
 
 public class CameraController : MonoBehaviour
 {
 	[SerializeField] private CinemachineVirtualCamera[] virtualCameras;
-	private int currentCameraIndex;
+	private int currentCameraIndex = 0;
 
 
 	void Start()
 	{
-		virtualCameras[currentCameraIndex].Priority = 1;
+		for (var i = 0; i < virtualCameras.Length; i++)
+		{
+			if (i == currentCameraIndex)
+			{
+				virtualCameras[i].Priority = 1;
+			}
+			else
+			{
+				virtualCameras[i].Priority = 0;
+			}
+		}
+		//virtualCameras[currentCameraIndex].Priority = 1;
 	}
 
 	void Update()

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Unity.VisualScripting;
 
 public class CarController : MonoBehaviour
 {
@@ -31,7 +32,7 @@ public class CarController : MonoBehaviour
     //WHEELS
 
     [Header("WHEELS")] public GameObject frontLeftMesh;
-    public WheelCollider frontLeftCollider;
+    public WheelCollider frontLeftCollider; //
     [Space(5)] public GameObject frontRightMesh;
     public WheelCollider frontRightCollider;
     [Space(5)] public GameObject rearLeftMesh;
@@ -509,6 +510,30 @@ public class CarController : MonoBehaviour
     public void Handbrake()
     {
         CancelInvoke("RecoverTraction");
+
+        /*
+        frontLeftCollider.forwardFriction.stiffness = 0.5f;
+        frontRightCollider.forwardFriction.stiffness = 0.5f;
+        rearLeftCollider.forwardFriction.stiffness = 0.5f;
+        rearRightCollider.forwardFriction.stiffness = 0.5f;*/
+        // Set brake torque to maximum to lock the wheels
+        frontLeftCollider.brakeTorque = Mathf.Infinity;
+        frontRightCollider.brakeTorque = Mathf.Infinity;
+        rearLeftCollider.brakeTorque = Mathf.Infinity;
+        rearRightCollider.brakeTorque = Mathf.Infinity;
+
+        // Set motor torque to 0 to stop the wheels from rotating
+        frontLeftCollider.motorTorque = 0f;
+        frontRightCollider.motorTorque = 0f;
+        rearLeftCollider.motorTorque = 0f;
+        rearRightCollider.motorTorque = 0f;
+        
+        DriftCarPS();
+    }
+    // oroginal Handbrake()
+    public void Handbrake2()
+    {
+        CancelInvoke("RecoverTraction");
         // We are going to start losing traction smoothly, there is were our 'driftingAxis' variable takes
         // place. This variable will start from 0 and will reach a top value of 1, which means that the maximum
         // drifting value has been reached. It will increase smoothly by using the variable Time.deltaTime.
@@ -538,9 +563,10 @@ public class CarController : MonoBehaviour
         // = 1f.
         if (driftingAxis < 1f)
         {
+            Debug.Log("4");
             FLWheelFriction.extremumSlip = FLWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
             frontLeftCollider.sidewaysFriction = FLWheelFriction;
-
+            Debug.Log(" - - - - " + FLWheelFriction.extremumSlip);
             FRWheelFriction.extremumSlip = FRWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
             frontRightCollider.sidewaysFriction = FRWheelFriction;
 
