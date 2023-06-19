@@ -25,11 +25,11 @@ public class CarSpeedInfo : MonoBehaviour
         {
             try
             {
-                if (speedInfoUpdateTime < 0.2f)
+                if (speedInfoUpdateTime < 0.15f)
                 {
                     speedInfoUpdateTime += Time.deltaTime;
                 }
-                else if (speedInfoUpdateTime >= 0.2f)
+                else if (speedInfoUpdateTime >= 0.15f)
                 {
                     textGameObject.text = Mathf.RoundToInt(Mathf.Abs(_caRigidbody.velocity.magnitude * 3.6f)).ToString();
                     speedInfoUpdateTime = 0f;
