@@ -470,18 +470,18 @@ public class CarController : MonoBehaviour
         {
             if (throttleAxis > 0f)
             {
-                throttleAxis = throttleAxis - (Time.deltaTime * 10f);
+                throttleAxis -= (Time.deltaTime * 10f);
             }
             else if (throttleAxis < 0f)
             {
-                throttleAxis = throttleAxis + (Time.deltaTime * 10f);
+                throttleAxis += (Time.deltaTime * 10f);
             }
             if (Mathf.Abs(throttleAxis) < 0.15f)
             {
                 throttleAxis = 0f;
             }
         }
-        carRigidbody.velocity = carRigidbody.velocity * (1f / (1f + (0.025f * decelerationMultiplier)));
+        carRigidbody.velocity *= (1f / (1f + (0.025f * decelerationMultiplier)));
         // Since we want to decelerate the car, we are going to remove the torque from the wheels of the car.
         frontLeftCollider.motorTorque = 0;
         frontRightCollider.motorTorque = 0;
