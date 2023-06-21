@@ -196,6 +196,7 @@ GameObject:
   - component: {fileID: 980958713441166879}
   - component: {fileID: 980958713441166872}
   - component: {fileID: 980958713441166874}
+  - component: {fileID: 4216923842546864809}
   - component: {fileID: 980958713441166868}
   - component: {fileID: 980958713441166875}
   m_Layer: 0
@@ -252,22 +253,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 196
   maxReverseSpeed: 45
-  accelerationMultiplier: 8
+  accelerationMultiplier: 150
   decelerationMultiplier: 1
-  brakeForce: 500
+  brakeForce: 2000
   distributionBrakingForceOnFrontAxis: 0.5
   handbrakeDriftMultiplier: 5
   steeringSpeed: 0.5
   maxSteeringAngle: 38
+  drive: 2
   bodyMassCenter: {x: 0, y: 0, z: 0}
-  frontLeftMesh: {fileID: 980958714242811031}
-  frontLeftCollider: {fileID: 980958713574317406}
-  frontRightMesh: {fileID: 980958714525384442}
-  frontRightCollider: {fileID: 980958714724483905}
-  rearLeftMesh: {fileID: 980958713474640066}
-  rearLeftCollider: {fileID: 980958713105172867}
-  rearRightMesh: {fileID: 980958714900754534}
-  rearRightCollider: {fileID: 980958714404014940}
+  FLCollider: {fileID: 980958713574317406}
+  FRCollider: {fileID: 980958714724483905}
+  RLCollider: {fileID: 980958713105172867}
+  RRCollider: {fileID: 980958714404014940}
   isDrifting: 0
   isTractionLocked: 0
   isBraking: 0
@@ -279,6 +277,23 @@ MonoBehaviour:
   localVelocityZ: 0
   localVelocityX: 0
   driftingAxis: 0
+--- !u!114 &4216923842546864809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 980958713441166878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7a414989c331a34c8c3ec8a56a2b5c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  carObject: {fileID: 0}
+  FLMesh: {fileID: 980958714242811031}
+  FRMesh: {fileID: 980958714525384442}
+  RLMesh: {fileID: 980958713474640066}
+  RRMesh: {fileID: 980958714900754534}
 --- !u!114 &980958713441166868
 MonoBehaviour:
   m_ObjectHideFlags: 0

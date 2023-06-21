@@ -1,20 +1,23 @@
-using System.Collections.Generic;
 using UnityEngine;
 using System;
-using Unity.VisualScripting;
 
 public class CarController : MonoBehaviour
 {
+    internal enum driveType{
+        frontWheelDrive,
+        rearWheelDrive,
+        allWheelDrive
+    }
+    
 	#region Variables
 	//CAR SETUP
-
     [Header("CAR SETUP")] [Space(8)] [Range(20, 280)]
-    public int maxSpeed = 100;
+    public short maxSpeed = 100;
     public float minSpeed { get; private set; }
     [Range(30, 100)] public int maxReverseSpeed = 45;
-    [Range(1, 10)] public int accelerationMultiplier = 3;
+    [RangeEx(50, 500, 50)] public int accelerationMultiplier = 150;
     [Range(1, 10)] public int decelerationMultiplier = 2;
-    [Range(100, 1000)] public int brakeForce = 500;
+    [RangeEx(500, 4000, 250)] public int brakeForce = 2000;
     [Range(0f, 1f)] public float distributionBrakingForceOnFrontAxis = 0.5f;
     [Range(1, 10)] public int handbrakeDriftMultiplier = 5; // How much grip the car loses when the user hit the handbrake.
     //[Range(?, ?)]
@@ -22,32 +25,28 @@ public class CarController : MonoBehaviour
     [Range(30, 60)] public int maxSteeringAngle = 38;
     /*[Range(0.9f, 1.85f)]
     public float ackermanCoef = 1.1f;*/
+    [SerializeField]private driveType drive;
+    
     [SerializeField] 
     [Space(10)] public Vector3 bodyMassCenter; // This is a vector that contains the center of mass of the car. I recommend to set this value
                                    // in the points x = 0 and z = 0 of your car. You can select the value that you want in the y axis,
                                    // however, you must notice that the higher this value is, the more unstable the car becomes.
                                    // Usually the y value goes from 0 to 1.5.
-                                   
-                                   
+    
     //WHEELS
 
-    [Header("WHEELS")] public GameObject frontLeftMesh;
-    public WheelCollider frontLeftCollider; //
-    [Space(5)] public GameObject frontRightMesh;
-    public WheelCollider frontRightCollider;
-    [Space(5)] public GameObject rearLeftMesh;
-    public WheelCollider rearLeftCollider;
-    [Space(5)] public GameObject rearRightMesh;
-    public WheelCollider rearRightCollider;
-
-
+    [Header("WHEELS")] 
+    public WheelCollider FLCollider;
+    public WheelCollider FRCollider;
+    public WheelCollider RLCollider;
+    public WheelCollider RRCollider;
+    
     //CAR DATA
 
     [HideInInspector] public float carSpeed { get; private set; }
     [HideInInspector] public bool isDrifting;
     [HideInInspector] public bool isTractionLocked;
     [HideInInspector] public bool isBraking;
-
 
     //CONTROLS
 
@@ -62,8 +61,7 @@ public class CarController : MonoBehaviour
     private ButtonsTouchManager turnLeft_BTM;
     [SerializeField] private GameObject handbrakeButton;
     private ButtonsTouchManager handbrake_BTM;
-
-
+    
 
     //PRIVATE VARIABLES
 
@@ -91,7 +89,12 @@ public class CarController : MonoBehaviour
     private float RRWExtremumSlip;
 	#endregion
 
-
+    public float extremumSlip;
+    public float extremumValue;
+    public float asymptoteSlip;
+    public float asymptoteValue;
+    public float stiffness;
+    
 	void Start()
     {
         //In this part, we set the 'carRigidbody' value with the Rigidbody attached to this
@@ -108,33 +111,33 @@ public class CarController : MonoBehaviour
         if (true)
         {
             FLWheelFriction = new WheelFrictionCurve();
-            FLWExtremumSlip = frontLeftCollider.sidewaysFriction.extremumSlip;
-            FLWheelFriction.extremumSlip = frontLeftCollider.sidewaysFriction.extremumSlip;
-            FLWheelFriction.extremumValue = frontLeftCollider.sidewaysFriction.extremumValue;
-            FLWheelFriction.asymptoteSlip = frontLeftCollider.sidewaysFriction.asymptoteSlip;
-            FLWheelFriction.asymptoteValue = frontLeftCollider.sidewaysFriction.asymptoteValue;
-            FLWheelFriction.stiffness = frontLeftCollider.sidewaysFriction.stiffness;
+            FLWExtremumSlip = FLCollider.sidewaysFriction.extremumSlip;
+            FLWheelFriction.extremumSlip = FLCollider.sidewaysFriction.extremumSlip;
+            FLWheelFriction.extremumValue = FLCollider.sidewaysFriction.extremumValue;
+            FLWheelFriction.asymptoteSlip = FLCollider.sidewaysFriction.asymptoteSlip;
+            FLWheelFriction.asymptoteValue = FLCollider.sidewaysFriction.asymptoteValue;
+            FLWheelFriction.stiffness = FLCollider.sidewaysFriction.stiffness;
             FRWheelFriction = new WheelFrictionCurve();
-            FRWExtremumSlip = frontRightCollider.sidewaysFriction.extremumSlip;
-            FRWheelFriction.extremumSlip = frontRightCollider.sidewaysFriction.extremumSlip;
-            FRWheelFriction.extremumValue = frontRightCollider.sidewaysFriction.extremumValue;
-            FRWheelFriction.asymptoteSlip = frontRightCollider.sidewaysFriction.asymptoteSlip;
-            FRWheelFriction.asymptoteValue = frontRightCollider.sidewaysFriction.asymptoteValue;
-            FRWheelFriction.stiffness = frontRightCollider.sidewaysFriction.stiffness;
+            FRWExtremumSlip = FRCollider.sidewaysFriction.extremumSlip;
+            FRWheelFriction.extremumSlip = FRCollider.sidewaysFriction.extremumSlip;
+            FRWheelFriction.extremumValue = FRCollider.sidewaysFriction.extremumValue;
+            FRWheelFriction.asymptoteSlip = FRCollider.sidewaysFriction.asymptoteSlip;
+            FRWheelFriction.asymptoteValue = FRCollider.sidewaysFriction.asymptoteValue;
+            FRWheelFriction.stiffness = FRCollider.sidewaysFriction.stiffness;
             RLWheelFriction = new WheelFrictionCurve();
-            RLWExtremumSlip = rearLeftCollider.sidewaysFriction.extremumSlip;
-            RLWheelFriction.extremumSlip = rearLeftCollider.sidewaysFriction.extremumSlip;
-            RLWheelFriction.extremumValue = rearLeftCollider.sidewaysFriction.extremumValue;
-            RLWheelFriction.asymptoteSlip = rearLeftCollider.sidewaysFriction.asymptoteSlip;
-            RLWheelFriction.asymptoteValue = rearLeftCollider.sidewaysFriction.asymptoteValue;
-            RLWheelFriction.stiffness = rearLeftCollider.sidewaysFriction.stiffness;
+            RLWExtremumSlip = RLCollider.sidewaysFriction.extremumSlip;
+            RLWheelFriction.extremumSlip = RLCollider.sidewaysFriction.extremumSlip;
+            RLWheelFriction.extremumValue = RLCollider.sidewaysFriction.extremumValue;
+            RLWheelFriction.asymptoteSlip = RLCollider.sidewaysFriction.asymptoteSlip;
+            RLWheelFriction.asymptoteValue = RLCollider.sidewaysFriction.asymptoteValue;
+            RLWheelFriction.stiffness = RLCollider.sidewaysFriction.stiffness;
             RRWheelFriction = new WheelFrictionCurve();
-            RRWExtremumSlip = rearRightCollider.sidewaysFriction.extremumSlip;
-            RRWheelFriction.extremumSlip = rearRightCollider.sidewaysFriction.extremumSlip;
-            RRWheelFriction.extremumValue = rearRightCollider.sidewaysFriction.extremumValue;
-            RRWheelFriction.asymptoteSlip = rearRightCollider.sidewaysFriction.asymptoteSlip;
-            RRWheelFriction.asymptoteValue = rearRightCollider.sidewaysFriction.asymptoteValue;
-            RRWheelFriction.stiffness = rearRightCollider.sidewaysFriction.stiffness;
+            RRWExtremumSlip = RRCollider.sidewaysFriction.extremumSlip;
+            RRWheelFriction.extremumSlip = RRCollider.sidewaysFriction.extremumSlip;
+            RRWheelFriction.extremumValue = RRCollider.sidewaysFriction.extremumValue;
+            RRWheelFriction.asymptoteSlip = RRCollider.sidewaysFriction.asymptoteSlip;
+            RRWheelFriction.asymptoteValue = RRCollider.sidewaysFriction.asymptoteValue;
+            RRWheelFriction.stiffness = RRCollider.sidewaysFriction.stiffness;
         }
 
 
@@ -159,17 +162,20 @@ public class CarController : MonoBehaviour
 	}
 
 
-	void Update()
+    void Update()
     {
-        // We call the method AnimateWheelMeshes() in order to match the wheel collider movements with the 3D meshes of the wheels.
-		AnimateWheelMeshes();
+        extremumSlip = RLCollider.sidewaysFriction.extremumSlip;
+        extremumValue = RLCollider.sidewaysFriction.extremumValue;
+        asymptoteSlip = RLCollider.sidewaysFriction.asymptoteSlip;
+        asymptoteValue = RLCollider.sidewaysFriction.asymptoteValue; 
+        stiffness = RLCollider.sidewaysFriction.stiffness;
     }
 
     void FixedUpdate()
     {
         //CAR DATA
 
-        carSpeed = (2 * Mathf.PI * frontLeftCollider.radius * frontLeftCollider.rpm * 60) / 1000;
+        carSpeed = (2 * Mathf.PI * FLCollider.radius * FLCollider.rpm * 60) / 1000;
         // Save the local velocity of the car in the x axis. Used to know if the car is drifting.
         localVelocityX = transform.InverseTransformDirection(carRigidbody.velocity).x;
         // Save the local velocity of the car in the z axis. Used to know if the car is going forward or backwards.
@@ -225,7 +231,7 @@ public class CarController : MonoBehaviour
             if (!(Input.GetKey(KeyCode.Space) || handbrake_BTM.isPressed))
             {
                 //Debug.Log("------RecoverTraction()------");
-                RecoverTraction();
+                //RecoverTraction();
             }
             if (!(Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.S) ||
                 Input.GetKey(KeyCode.DownArrow) || throttle_BTM.isPressed || reverse_BTM.isPressed))
@@ -266,8 +272,8 @@ public class CarController : MonoBehaviour
             steeringAxis = -1f;
         }
         var steeringAngle = steeringAxis * maxSteeringAngle;
-        frontLeftCollider.steerAngle = Mathf.Lerp(frontLeftCollider.steerAngle, steeringAngle, steeringSpeed);
-        frontRightCollider.steerAngle = Mathf.Lerp(frontRightCollider.steerAngle, steeringAngle, steeringSpeed);
+        FLCollider.steerAngle = Mathf.Lerp(FLCollider.steerAngle, steeringAngle, steeringSpeed);
+        FRCollider.steerAngle = Mathf.Lerp(FRCollider.steerAngle, steeringAngle, steeringSpeed);
     }
 
     public void TurnRight()
@@ -280,8 +286,8 @@ public class CarController : MonoBehaviour
             steeringAxis = 1f;
         }
         var steeringAngle = steeringAxis * maxSteeringAngle;
-        frontLeftCollider.steerAngle = Mathf.Lerp(frontLeftCollider.steerAngle, steeringAngle, steeringSpeed);
-        frontRightCollider.steerAngle = Mathf.Lerp(frontRightCollider.steerAngle, steeringAngle, steeringSpeed);
+        FLCollider.steerAngle = Mathf.Lerp(FLCollider.steerAngle, steeringAngle, steeringSpeed);
+        FRCollider.steerAngle = Mathf.Lerp(FRCollider.steerAngle, steeringAngle, steeringSpeed);
     }
 
     public void ResetSteeringAngle()
@@ -294,50 +300,14 @@ public class CarController : MonoBehaviour
         {
             steeringAxis = steeringAxis - (Time.deltaTime * 10f * steeringSpeed);
         }
-        if (Mathf.Abs(frontLeftCollider.steerAngle) < 1f)
+        if (Mathf.Abs(FLCollider.steerAngle) < 1f)
         {
             steeringAxis = 0f;
         }
         var steeringAngle = steeringAxis * maxSteeringAngle;
-        frontLeftCollider.steerAngle = Mathf.Lerp(frontLeftCollider.steerAngle, steeringAngle, steeringSpeed);
-        frontRightCollider.steerAngle = Mathf.Lerp(frontRightCollider.steerAngle, steeringAngle, steeringSpeed);
+        FLCollider.steerAngle = Mathf.Lerp(FLCollider.steerAngle, steeringAngle, steeringSpeed);
+        FRCollider.steerAngle = Mathf.Lerp(FRCollider.steerAngle, steeringAngle, steeringSpeed);
     }
-
-	// This method matches both the position and rotation of the WheelColliders with the WheelMeshes.
-	void AnimateWheelMeshes()
-	{
-		try
-		{
-			Quaternion FLWRotation;
-			Vector3 FLWPosition;
-			frontLeftCollider.GetWorldPose(out FLWPosition, out FLWRotation);
-			frontLeftMesh.transform.position = FLWPosition;
-			frontLeftMesh.transform.rotation = FLWRotation;
-
-			Quaternion FRWRotation;
-			Vector3 FRWPosition;
-			frontRightCollider.GetWorldPose(out FRWPosition, out FRWRotation);
-			frontRightMesh.transform.position = FRWPosition;
-			frontRightMesh.transform.rotation = FRWRotation;
-
-			Quaternion RLWRotation;
-			Vector3 RLWPosition;
-			rearLeftCollider.GetWorldPose(out RLWPosition, out RLWRotation);
-			rearLeftMesh.transform.position = RLWPosition;
-			rearLeftMesh.transform.rotation = RLWRotation;
-
-			Quaternion RRWRotation;
-			Vector3 RRWPosition;
-			rearRightCollider.GetWorldPose(out RRWPosition, out RRWRotation);
-			rearRightMesh.transform.position = RRWPosition;
-			rearRightMesh.transform.rotation = RRWRotation;
-		}
-		catch (Exception ex)
-		{
-			Debug.LogWarning(ex);
-		}
-	}
-
 
 	//ENGINE AND BRAKING METHODS
 
@@ -373,24 +343,44 @@ public class CarController : MonoBehaviour
             if (Mathf.RoundToInt(carSpeed) < maxSpeed)
             {
                 //Apply positive torque in all wheels to go forward if maxSpeed has not been reached.
-                frontLeftCollider.brakeTorque = 0;
-                frontLeftCollider.motorTorque = (accelerationMultiplier * 50f) * throttleAxis;
-                frontRightCollider.brakeTorque = 0;
-                frontRightCollider.motorTorque = (accelerationMultiplier * 50f) * throttleAxis;
-                rearLeftCollider.brakeTorque = 0;
-                rearLeftCollider.motorTorque = (accelerationMultiplier * 50f) * throttleAxis;
-                rearRightCollider.brakeTorque = 0;
-                rearRightCollider.motorTorque = (accelerationMultiplier * 50f) * throttleAxis;
+                switch (drive)
+                {
+                    case driveType.frontWheelDrive:
+                        FLCollider.brakeTorque = 0;
+                        FLCollider.motorTorque = accelerationMultiplier * 2 * throttleAxis;
+                        FRCollider.brakeTorque = 0;
+                        FRCollider.motorTorque = accelerationMultiplier * 2 * throttleAxis;
+                        break;
+                    case driveType.rearWheelDrive:
+                        RLCollider.brakeTorque = 0;
+                        RLCollider.motorTorque = accelerationMultiplier * 2 * throttleAxis;
+                        RRCollider.brakeTorque = 0;
+                        RRCollider.motorTorque = accelerationMultiplier * 2 * throttleAxis;
+                        break;
+                    case driveType.allWheelDrive:
+                        FLCollider.brakeTorque = 0;
+                        FLCollider.motorTorque = accelerationMultiplier * throttleAxis;
+                        FRCollider.brakeTorque = 0;
+                        FRCollider.motorTorque = accelerationMultiplier * throttleAxis;
+                        RLCollider.brakeTorque = 0;
+                        RLCollider.motorTorque = accelerationMultiplier * throttleAxis;
+                        RRCollider.brakeTorque = 0;
+                        RRCollider.motorTorque = accelerationMultiplier * throttleAxis;
+                        break;
+                    default:
+                        Debug.Log("Error case is achieved.");
+                        break;
+                }
             }
             else
             {
                 // If the maxSpeed has been reached, then stop applying torque to the wheels.
                 // IMPORTANT: The maxSpeed variable should be considered as an approximation; the speed of the car
                 // could be a bit higher than expected.
-                frontLeftCollider.motorTorque = 0;
-                frontRightCollider.motorTorque = 0;
-                rearLeftCollider.motorTorque = 0;
-                rearRightCollider.motorTorque = 0;
+                FLCollider.motorTorque = 0;
+                FRCollider.motorTorque = 0;
+                RLCollider.motorTorque = 0;
+                RRCollider.motorTorque = 0;
             }
         }
     }
@@ -408,7 +398,7 @@ public class CarController : MonoBehaviour
             DriftCarPS();
         }
         // The following part sets the throttle power to -1 smoothly.
-        throttleAxis = throttleAxis - (Time.deltaTime * 3f);
+        throttleAxis -= (Time.deltaTime * 3f);
         if (throttleAxis < -1f)
         {
             throttleAxis = -1f;
@@ -422,35 +412,71 @@ public class CarController : MonoBehaviour
         {
             if (Mathf.Abs(Mathf.RoundToInt(carSpeed)) < maxReverseSpeed)
             {
-                //Apply negative torque in all wheels to go in reverse if maxReverseSpeed has not been reached.
-                frontLeftCollider.brakeTorque = 0;
-                frontLeftCollider.motorTorque = (accelerationMultiplier * 50f) * throttleAxis;
-                frontRightCollider.brakeTorque = 0;
-                frontRightCollider.motorTorque = (accelerationMultiplier * 50f) * throttleAxis;
-                rearLeftCollider.brakeTorque = 0;
-                rearLeftCollider.motorTorque = (accelerationMultiplier * 50f) * throttleAxis;
-                rearRightCollider.brakeTorque = 0;
-                rearRightCollider.motorTorque = (accelerationMultiplier * 50f) * throttleAxis;
+                // Apply negative torque in all wheels to go in reverse if maxReverseSpeed has not been reached.
+                switch (drive)
+                {
+                    case driveType.frontWheelDrive:
+                        FLCollider.brakeTorque = 0;
+                        FLCollider.motorTorque = accelerationMultiplier * 2 * throttleAxis;
+                        FRCollider.brakeTorque = 0;
+                        FRCollider.motorTorque = accelerationMultiplier * 2 * throttleAxis;
+                        break;
+                    case driveType.rearWheelDrive:
+                        RLCollider.brakeTorque = 0;
+                        RLCollider.motorTorque = accelerationMultiplier * 2 * throttleAxis;
+                        RRCollider.brakeTorque = 0;
+                        RRCollider.motorTorque = accelerationMultiplier * 2 * throttleAxis;
+                        break;
+                    case driveType.allWheelDrive:
+                        FLCollider.brakeTorque = 0;
+                        FLCollider.motorTorque = accelerationMultiplier * throttleAxis;
+                        FRCollider.brakeTorque = 0;
+                        FRCollider.motorTorque = accelerationMultiplier * throttleAxis;
+                        RLCollider.brakeTorque = 0;
+                        RLCollider.motorTorque = accelerationMultiplier * throttleAxis;
+                        RRCollider.brakeTorque = 0;
+                        RRCollider.motorTorque = accelerationMultiplier * throttleAxis;
+                        break;
+                    default:
+                        Debug.Log("Error case is achieved.");
+                        break;
+                }
             }
             else
             {
-                //If the maxReverseSpeed has been reached, then stop applying torque to the wheels.
+                // If the maxReverseSpeed has been reached, then stop applying torque to the wheels.
                 // IMPORTANT: The maxReverseSpeed variable should be considered as an approximation; the speed of the car
                 // could be a bit higher than expected.
-                frontLeftCollider.motorTorque = 0;
-                frontRightCollider.motorTorque = 0;
-                rearLeftCollider.motorTorque = 0;
-                rearRightCollider.motorTorque = 0;
+                FLCollider.motorTorque = 0;
+                FRCollider.motorTorque = 0;
+                RLCollider.motorTorque = 0;
+                RRCollider.motorTorque = 0;
             }
         }
     }
 
     public void ThrottleOff()
     {
-        frontLeftCollider.motorTorque = 0;
-        frontRightCollider.motorTorque = 0;
-        rearLeftCollider.motorTorque = 0;
-        rearRightCollider.motorTorque = 0;
+        switch (drive)
+        {
+            case driveType.frontWheelDrive:
+                FLCollider.motorTorque = 0;
+                FRCollider.motorTorque = 0;
+                break;
+            case driveType.rearWheelDrive:
+                RLCollider.motorTorque = 0;
+                RRCollider.motorTorque = 0;
+                break;
+            case driveType.allWheelDrive:
+                FLCollider.motorTorque = 0;
+                FRCollider.motorTorque = 0;
+                RLCollider.motorTorque = 0;
+                RRCollider.motorTorque = 0;
+                break;
+            default:
+                Debug.Log("Error case is achieved.");
+                break;
+        }
     }
 
     public void DecelerateCar()
@@ -483,10 +509,7 @@ public class CarController : MonoBehaviour
         }
         carRigidbody.velocity *= (1f / (1f + (0.025f * decelerationMultiplier)));
         // Since we want to decelerate the car, we are going to remove the torque from the wheels of the car.
-        frontLeftCollider.motorTorque = 0;
-        frontRightCollider.motorTorque = 0;
-        rearLeftCollider.motorTorque = 0;
-        rearRightCollider.motorTorque = 0;
+        ThrottleOff();
         // If the magnitude of the car's velocity is less than 0.25f (very slow velocity), then stop the car completely and
         // also cancel the invoke of this method.
         if (carRigidbody.velocity.magnitude < minSpeed)
@@ -498,10 +521,10 @@ public class CarController : MonoBehaviour
 
     public void Brakes()
     {
-        frontLeftCollider.brakeTorque = brakeForce * distributionBrakingForceOnFrontAxis;
-        frontRightCollider.brakeTorque = brakeForce * distributionBrakingForceOnFrontAxis;
-        rearLeftCollider.brakeTorque = brakeForce * (1 - distributionBrakingForceOnFrontAxis);
-        rearRightCollider.brakeTorque = brakeForce * (1 - distributionBrakingForceOnFrontAxis);
+        FLCollider.brakeTorque = brakeForce * distributionBrakingForceOnFrontAxis;
+        FRCollider.brakeTorque = brakeForce * distributionBrakingForceOnFrontAxis;
+        RLCollider.brakeTorque = brakeForce * (1 - distributionBrakingForceOnFrontAxis);
+        RRCollider.brakeTorque = brakeForce * (1 - distributionBrakingForceOnFrontAxis);
     }
 
     // This function is used to make the car lose traction. By using this, the car will start drifting. The amount of traction lost
@@ -510,23 +533,18 @@ public class CarController : MonoBehaviour
     public void Handbrake()
     {
         CancelInvoke("RecoverTraction");
-
-        /*
-        frontLeftCollider.forwardFriction.stiffness = 0.5f;
-        frontRightCollider.forwardFriction.stiffness = 0.5f;
-        rearLeftCollider.forwardFriction.stiffness = 0.5f;
-        rearRightCollider.forwardFriction.stiffness = 0.5f;*/
+        
+        //RLCollider.
+        
         // Set brake torque to maximum to lock the wheels
-        frontLeftCollider.brakeTorque = Mathf.Infinity;
-        frontRightCollider.brakeTorque = Mathf.Infinity;
-        rearLeftCollider.brakeTorque = Mathf.Infinity;
-        rearRightCollider.brakeTorque = Mathf.Infinity;
+        RLCollider.brakeTorque = Mathf.Infinity;
+        RRCollider.brakeTorque = Mathf.Infinity;
 
         // Set motor torque to 0 to stop the wheels from rotating
-        frontLeftCollider.motorTorque = 0f;
-        frontRightCollider.motorTorque = 0f;
-        rearLeftCollider.motorTorque = 0f;
-        rearRightCollider.motorTorque = 0f;
+        //FLCollider.motorTorque = 0f;
+        //FRCollider.motorTorque = 0f;
+        RLCollider.motorTorque = 0f;
+        RRCollider.motorTorque = 0f;
         
         DriftCarPS();
     }
@@ -563,18 +581,18 @@ public class CarController : MonoBehaviour
         // = 1f.
         if (driftingAxis < 1f)
         {
-            Debug.Log("4");
+            //Debug.Log("4");
             FLWheelFriction.extremumSlip = FLWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
-            frontLeftCollider.sidewaysFriction = FLWheelFriction;
-            Debug.Log(" - - - - " + FLWheelFriction.extremumSlip);
+            FLCollider.sidewaysFriction = FLWheelFriction;
+            //Debug.Log(" - - - - " + FLWheelFriction.extremumSlip);
             FRWheelFriction.extremumSlip = FRWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
-            frontRightCollider.sidewaysFriction = FRWheelFriction;
+            FRCollider.sidewaysFriction = FRWheelFriction;
 
             RLWheelFriction.extremumSlip = RLWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
-            rearLeftCollider.sidewaysFriction = RLWheelFriction;
+            RLCollider.sidewaysFriction = RLWheelFriction;
 
             RRWheelFriction.extremumSlip = RRWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
-            rearRightCollider.sidewaysFriction = RRWheelFriction;
+            RRCollider.sidewaysFriction = RRWheelFriction;
         }
 
         // Whenever the player uses the handbrake, it means that the wheels are locked, so we set 'isTractionLocked = true'
@@ -649,7 +667,7 @@ public class CarController : MonoBehaviour
 
     }
 
-    public void RecoverTraction()
+    public void RecoverTraction2()
     {
         isTractionLocked = false;
         driftingAxis = driftingAxis - (Time.deltaTime / 1.5f);
@@ -664,16 +682,16 @@ public class CarController : MonoBehaviour
         if (FLWheelFriction.extremumSlip > FLWExtremumSlip)
         {
             FLWheelFriction.extremumSlip = FLWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
-            frontLeftCollider.sidewaysFriction = FLWheelFriction;
+            FLCollider.sidewaysFriction = FLWheelFriction;
 
             FRWheelFriction.extremumSlip = FRWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
-            frontRightCollider.sidewaysFriction = FRWheelFriction;
+            FRCollider.sidewaysFriction = FRWheelFriction;
 
             RLWheelFriction.extremumSlip = RLWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
-            rearLeftCollider.sidewaysFriction = RLWheelFriction;
+            RLCollider.sidewaysFriction = RLWheelFriction;
 
             RRWheelFriction.extremumSlip = RRWExtremumSlip * handbrakeDriftMultiplier * driftingAxis;
-            rearRightCollider.sidewaysFriction = RRWheelFriction;
+            RRCollider.sidewaysFriction = RRWheelFriction;
 
             Invoke("RecoverTraction", Time.deltaTime);
 
@@ -681,16 +699,16 @@ public class CarController : MonoBehaviour
         else if (FLWheelFriction.extremumSlip < FLWExtremumSlip)
         {
             FLWheelFriction.extremumSlip = FLWExtremumSlip;
-            frontLeftCollider.sidewaysFriction = FLWheelFriction;
+            FLCollider.sidewaysFriction = FLWheelFriction;
 
             FRWheelFriction.extremumSlip = FRWExtremumSlip;
-            frontRightCollider.sidewaysFriction = FRWheelFriction;
+            FRCollider.sidewaysFriction = FRWheelFriction;
 
             RLWheelFriction.extremumSlip = RLWExtremumSlip;
-            rearLeftCollider.sidewaysFriction = RLWheelFriction;
+            RLCollider.sidewaysFriction = RLWheelFriction;
 
             RRWheelFriction.extremumSlip = RRWExtremumSlip;
-            rearRightCollider.sidewaysFriction = RRWheelFriction;
+            RRCollider.sidewaysFriction = RRWheelFriction;
 
             driftingAxis = 0f;
         }
